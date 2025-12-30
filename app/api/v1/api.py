@@ -6,9 +6,9 @@ from app.api.v1.endpoints.endpoints_course import router as course_router
 from app.api.v1.endpoints.endpoints_program import router as program_router
 from app.api.v1.endpoints.endpoints_school import router as school_router
 from app.api.v1.endpoints import endpoints_user, endpoints_student, endpoints_advisor, endpoints_jury
+from app.core.responses import JSendRoute
 
-api_router = APIRouter()
-
+api_router = APIRouter(route_class=JSendRoute)
 # existing batches router
 api_router.include_router(
     batches.router,

@@ -13,6 +13,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "asyncpg>=0.28.0",
     "loguru>=0.7.0",
+    "email-validator>=2.3.0",
 ]
 
 [build-system]

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.crud import crud_school
+from app.services import services
 from app.schemas.schema_school import (
     SchoolCreate,
     SchoolUpdate,
@@ -19,12 +19,9 @@ router = APIRouter(
 async def create_school(
     payload: SchoolCreate,
     db: AsyncSession = Depends(get_db),
+    actor_name: str = "system"
 ):
-    return await crud_school.create_school(
-        db=db,
-        school_name=payload.school_name,
-        logo=payload.logo,
-    )
+    return await services.create_entity(db, "school", payload.model_dump(), actor_name)
 
 
 @router.get("/{school_id}", response_model=SchoolResponse)
@@ -32,17 +29,14 @@ async def get_school(
     school_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    school = await crud_school.get_school(db, school_id)
-    if not school:
-        raise HTTPException(status_code=404, detail="School not found")
-    return school
+    return await services.get_entity(db, "school", school_id)
 
 
 @router.get("/", response_model=list[SchoolResponse])
 async def get_schools(
     db: AsyncSession = Depends(get_db),
 ):
-    return await crud_school.get_schools(db)
+    return await services.list_entity(db, "school")
 
 
 @router.delete("/{school_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -50,7 +44,5 @@ async def delete_school(
     school_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    school = await crud_school.delete_school(db, school_id)
-    if not school:
-        raise HTTPException(status_code=404, detail="School not found")
+    await services.delete_entity(db, "school", school_id)
     return None

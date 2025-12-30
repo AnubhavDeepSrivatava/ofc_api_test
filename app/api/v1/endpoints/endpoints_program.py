@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.crud import crud_program
+from app.services import services
 from app.schemas.schema_program import (
     ProgramCreate,
     ProgramUpdate,
@@ -19,12 +19,9 @@ router = APIRouter(
 async def create_program(
     payload: ProgramCreate,
     db: AsyncSession = Depends(get_db),
+    actor_name: str = "system"
 ):
-    return await crud_program.create_program(
-        db=db,
-        program_name=payload.program_name,
-        school_id=payload.school_id,
-    )
+    return await services.create_entity(db, "program", payload.model_dump(), actor_name)
 
 
 @router.get("/{program_id}", response_model=ProgramResponse)
@@ -32,17 +29,14 @@ async def get_program(
     program_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    program = await crud_program.get_program(db, program_id)
-    if not program:
-        raise HTTPException(status_code=404, detail="Program not found")
-    return program
+    return await services.get_entity(db, "program", program_id)
 
 
 @router.get("/", response_model=list[ProgramResponse])
 async def get_programs(
     db: AsyncSession = Depends(get_db),
 ):
-    return await crud_program.get_programs(db)
+    return await services.list_entity(db, "program")
 
 
 @router.delete("/{program_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -50,7 +44,5 @@ async def delete_program(
     program_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    program = await crud_program.delete_program(db, program_id)
-    if not program:
-        raise HTTPException(status_code=404, detail="Program not found")
+    await services.delete_entity(db, "program", program_id)
     return None
